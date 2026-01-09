@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我們的貓咪行事曆</title>
+    <style>
+        :root {
+            --orange-cat: #ffb366;
+            --black-cat: #333333;
+            --heart-red: #ff4d4d;
+            --light-red: #ffcccc;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            background-color: #f9f9f9;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* 登入頁面 */
+        #login-screen {
+            position: fixed;
+            inset: 0;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        /* 主介面 */
+        #app {
+            display: none;
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+        }
+
+        .calendar-card {
+            background: white;
+            border-radius: 20px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            position: relative;
+            border-left: 8px solid var(--orange-cat);
+        }
+
+        .date-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .todo-item {
+            border-bottom: 1px dashed #eee;
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        input[type="text"] {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 16px; /* 防止 iOS 自動放大 */
+            background: transparent;
+        }
+
+        /* 愛心功能 */
+        .heart-btn {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            font-size: 20px;
+            color: var(--light-red);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            user-select: none;
+        }
+
+        .heart-btn.active {
+            color: var(--heart-red);
+            transform: scale(1.8); /* 點擊後變大 */
+        }
+
+        .cat-watermark {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 2rem;
+            opacity: 0.2;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <h3>🐾 輸入密碼開啟</h3>
+        <input type="password" id="pwd" placeholder="YYYYMMDD" 
+               style="padding:10px; border-radius:10px; border:1px solid #ddd; text-align:center;">
+        <button onclick="checkLogin()" style="margin-top:15px; padding:10px 20px; background:var(--orange-cat); border:none; border-radius:10px; color:white;">登入</button>
+    </div>
+
+    <div id="app">
+        <h2 id="month-display" style="text-align:center;">2024年行程</h2>
+        <div id="calendar-container"></div>
+    </div>
+
+    <script>
+        const PWD_KEY = "20190927";
+        const cats = ['🐈橘','🐈‍⬛黑','🐈賓士','🐈橘','🐈橘','🐈橘'];
+
+        function checkLogin() {
+            if(document.getElementById('pwd').value === PWD_KEY) {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('app').style.display = 'block';
+                renderCalendar();
+            } else {
+                alert('密碼錯誤！');
+            }
+        }
+
+        function renderCalendar() {
+            const container = document.getElementById('calendar-container');
+            const today = new Date();
+            
+            // 產生接下來 7 天的行程
+            for(let i=0; i<7; i++) {
+                let date = new Date();
+                date.setDate(today.getDate() + i);
+                const dateStr = date.toLocaleDateString();
+                
+                const card = document.createElement('div');
+                card.className = 'calendar-card';
+                // 根據日期分配不同貓咪
+                const catIcon = cats[i % 6];
+                
+                card.innerHTML = `
+                    <div class="date-title">${dateStr}</div>
+                    <div class="cat-watermark">${catIcon}</div>
+                    <div class="todo-item"><input type="text" placeholder="行程 1..." onchange="saveData('${dateStr}', 0, this.value)" value="${getData(dateStr, 0)}"></div>
+                    <div class="todo-item"><input type="text" placeholder="行程 2..." onchange="saveData('${dateStr}', 1, this.value)" value="${getData(dateStr, 1)}"></div>
+                    <div class="todo-item"><input type="text" placeholder="行程 3..." onchange="saveData('${dateStr}', 2, this.value)" value="${getData(dateStr, 2)}"></div>
+                    <div class="heart-btn ${getHeart(dateStr) ? 'active' : ''}" onclick="toggleHeart(this, '${dateStr}')">❤</div>
+                `;
+                container.appendChild(card);
+            }
+        }
+
+        // 資料儲存邏輯 (目前存於手機 local)
+        function saveData(date, index, val) {
+            let data = JSON.parse(localStorage.getItem(date) || '{"tasks":["","",""], "heart":false}');
+            data.tasks[index] = val;
+            localStorage.setItem(date, JSON.stringify(data));
+        }
+
+        function getData(date, index) {
+            let data = JSON.parse(localStorage.getItem(date) || '{"tasks":["","",""], "heart":false}');
+            return data.tasks[index];
+        }
+
+        function toggleHeart(el, date) {
+            el.classList.toggle('active');
+            let data = JSON.parse(localStorage.getItem(date) || '{"tasks":["","",""], "heart":false}');
+            data.heart = el.classList.contains('active');
+            localStorage.setItem(date, JSON.stringify(data));
+        }
+
+        function getHeart(date) {
+            let data = JSON.parse(localStorage.getItem(date) || '{"tasks":["","",""], "heart":false}');
+            return data.heart;
+        }
+    </script>
+</body>
+</html>
