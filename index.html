@@ -2,180 +2,152 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我們的貓咪行事曆</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>我們的貓咪月曆</title>
     <style>
         :root {
-            --orange-cat: #ffb366;
-            --black-cat: #333333;
+            --orange-main: #ffb366;
             --heart-red: #ff4d4d;
-            --light-red: #ffcccc;
+            --bg-color: #fdfaf7;
         }
+        body { font-family: sans-serif; margin: 0; background: var(--bg-color); color: #444; }
+        
+        /* 登入畫面 */
+        #login-screen { position: fixed; inset: 0; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
+        #app { display: none; padding: 10px; max-width: 500px; margin: auto; }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            margin: 0;
-            background-color: #f9f9f9;
-            display: flex;
-            justify-content: center;
-        }
+        /* 月曆標題與切換 */
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .btn-nav { background: var(--orange-main); border: none; color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; }
 
-        /* 登入頁面 */
-        #login-screen {
-            position: fixed;
-            inset: 0;
-            background: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-        }
+        /* 月曆網格 */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; background: white; padding: 10px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .weekday { text-align: center; font-size: 0.8rem; font-weight: bold; color: #888; padding: 5px 0; }
+        .day-cell { min-height: 60px; border-radius: 10px; border: 1px solid #f0f0f0; position: relative; padding: 5px; transition: 0.2s; }
+        .day-cell.today { border: 2px solid var(--orange-main); background: #fff9f2; }
+        .day-num { font-weight: bold; font-size: 14px; }
+        
+        /* 愛心樣式 */
+        .heart-icon { position: absolute; bottom: 2px; right: 2px; font-size: 12px; color: #ffcccc; transition: 0.3s; }
+        .heart-icon.active { color: var(--heart-red); transform: scale(1.5); }
 
-        /* 主介面 */
-        #app {
-            display: none;
-            width: 100%;
-            max-width: 500px;
-            padding: 20px;
-        }
-
-        .calendar-card {
-            background: white;
-            border-radius: 20px;
-            padding: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            position: relative;
-            border-left: 8px solid var(--orange-cat);
-        }
-
-        .date-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #555;
-            margin-bottom: 10px;
-        }
-
-        .todo-item {
-            border-bottom: 1px dashed #eee;
-            padding: 8px 0;
-            display: flex;
-            align-items: center;
-        }
-
-        input[type="text"] {
-            border: none;
-            outline: none;
-            width: 100%;
-            font-size: 16px; /* 防止 iOS 自動放大 */
-            background: transparent;
-        }
-
-        /* 愛心功能 */
-        .heart-btn {
-            position: absolute;
-            bottom: 15px;
-            right: 15px;
-            font-size: 20px;
-            color: var(--light-red);
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            user-select: none;
-        }
-
-        .heart-btn.active {
-            color: var(--heart-red);
-            transform: scale(1.8); /* 點擊後變大 */
-        }
-
-        .cat-watermark {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 2rem;
-            opacity: 0.2;
-        }
+        /* 行程輸入區域 (點擊日期後顯示) */
+        #details-panel { margin-top: 20px; background: white; border-radius: 20px; padding: 20px; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); }
+        .task-input { width: 100%; border: none; border-bottom: 1px solid #eee; padding: 12px 0; font-size: 16px; margin-bottom: 10px; outline: none; }
     </style>
 </head>
 <body>
 
-    <div id="login-screen">
-        <h3>🐾 輸入密碼開啟</h3>
-        <input type="password" id="pwd" placeholder="YYYYMMDD" 
-               style="padding:10px; border-radius:10px; border:1px solid #ddd; text-align:center;">
-        <button onclick="checkLogin()" style="margin-top:15px; padding:10px 20px; background:var(--orange-cat); border:none; border-radius:10px; color:white;">登入</button>
+<div id="login-screen">
+    <h2>🐾 貓咪秘密通道</h2>
+    <input type="password" id="pwd" placeholder="輸入密碼" style="padding:12px; border-radius:10px; border:1px solid #ddd; text-align:center;">
+    <button onclick="checkLogin()" style="margin-top:15px; padding:10px 30px; background:var(--orange-main); border:none; border-radius:20px; color:white; font-weight:bold;">開啟</button>
+</div>
+
+<div id="app">
+    <div class="calendar-header">
+        <button class="btn-nav" onclick="changeMonth(-1)">◀</button>
+        <h2 id="current-month-display">2026年 1月</h2>
+        <button class="btn-nav" onclick="changeMonth(1)">▶</button>
     </div>
 
-    <div id="app">
-        <h2 id="month-display" style="text-align:center;">2024年行程</h2>
-        <div id="calendar-container"></div>
+    <div class="calendar-grid" id="calendar-grid">
+        <div class="weekday">日</div><div class="weekday">一</div><div class="weekday">二</div>
+        <div class="weekday">三</div><div class="weekday">四</div><div class="weekday">五</div><div class="weekday">六</div>
     </div>
 
-    <script>
-        const PWD_KEY = "20190927";
-        const cats = ['🐈橘','🐈‍⬛黑','🐈賓士','🐈橘','🐈橘','🐈橘'];
+    <div id="details-panel" style="display:none;">
+        <h3 id="selected-date-label" style="margin-top:0;">選擇日期</h3>
+        <input type="text" class="task-input" id="t1" placeholder="行程 1..." onchange="updateData()">
+        <input type="text" class="task-input" id="t2" placeholder="行程 2..." onchange="updateData()">
+        <input type="text" class="task-input" id="t3" placeholder="行程 3..." onchange="updateData()">
+        <button onclick="toggleHeartInDetail()" id="detail-heart-btn" style="background:none; border:none; font-size:24px; cursor:pointer;">🤍</button>
+    </div>
+</div>
 
-        function checkLogin() {
-            if(document.getElementById('pwd').value === PWD_KEY) {
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('app').style.display = 'block';
-                renderCalendar();
-            } else {
-                alert('密碼錯誤！');
-            }
+<script>
+    let currentViewDate = new Date();
+    let selectedDateStr = "";
+
+    function checkLogin() {
+        if(document.getElementById('pwd').value === '20190927') {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            renderCalendar();
+        } else { alert('密碼錯囉！'); }
+    }
+
+    function renderCalendar() {
+        const grid = document.getElementById('calendar-grid');
+        // 清除舊日期（保留星期標籤）
+        const weekdays = grid.querySelectorAll('.weekday');
+        grid.innerHTML = "";
+        weekdays.forEach(w => grid.appendChild(w));
+
+        const year = currentViewDate.getFullYear();
+        const month = currentViewDate.getMonth();
+        document.getElementById('current-month-display').innerText = `${year}年 ${month + 1}月`;
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        // 填充空白
+        for(let i=0; i<firstDay; i++) {
+            grid.appendChild(document.createElement('div'));
         }
 
-        function renderCalendar() {
-            const container = document.getElementById('calendar-container');
-            const today = new Date();
+        // 填充日期
+        for(let d=1; d<=daysInMonth; d++) {
+            const dateStr = `${year}-${month+1}-${d}`;
+            const cell = document.createElement('div');
+            cell.className = 'day-cell';
+            if(new Date().toDateString() === new Date(year, month, d).toDateString()) cell.classList.add('today');
             
-            // 產生接下來 7 天的行程
-            for(let i=0; i<7; i++) {
-                let date = new Date();
-                date.setDate(today.getDate() + i);
-                const dateStr = date.toLocaleDateString();
-                
-                const card = document.createElement('div');
-                card.className = 'calendar-card';
-                // 根據日期分配不同貓咪
-                const catIcon = cats[i % 6];
-                
-                card.innerHTML = `
-                    <div class="date-title">${dateStr}</div>
-                    <div class="cat-watermark">${catIcon}</div>
-                    <div class="todo-item"><input type="text" placeholder="行程 1..." onchange="saveData('${dateStr}', 0, this.value)" value="${getData(dateStr, 0)}"></div>
-                    <div class="todo-item"><input type="text" placeholder="行程 2..." onchange="saveData('${dateStr}', 1, this.value)" value="${getData(dateStr, 1)}"></div>
-                    <div class="todo-item"><input type="text" placeholder="行程 3..." onchange="saveData('${dateStr}', 2, this.value)" value="${getData(dateStr, 2)}"></div>
-                    <div class="heart-btn ${getHeart(dateStr) ? 'active' : ''}" onclick="toggleHeart(this, '${dateStr}')">❤</div>
-                `;
-                container.appendChild(card);
-            }
+            const data = JSON.parse(localStorage.getItem(dateStr) || '{"tasks":["","",""], "heart":false}');
+            
+            cell.innerHTML = `
+                <div class="day-num">${d}</div>
+                <div class="heart-icon ${data.heart ? 'active' : ''}">❤</div>
+            `;
+            cell.onclick = () => showDetails(dateStr);
+            grid.appendChild(cell);
         }
+    }
 
-        // 資料儲存邏輯 (目前存於手機 local)
-        function saveData(date, index, val) {
-            let data = JSON.parse(localStorage.getItem(date) || '{"tasks":["","",""], "heart":false}');
-            data.tasks[index] = val;
-            localStorage.setItem(date, JSON.stringify(data));
-        }
+    function showDetails(dateStr) {
+        selectedDateStr = dateStr;
+        document.getElementById('details-panel').style.display = 'block';
+        document.getElementById('selected-date-label').innerText = dateStr;
+        
+        const data = JSON.parse(localStorage.getItem(dateStr) || '{"tasks":["","",""], "heart":false}');
+        document.getElementById('t1').value = data.tasks[0];
+        document.getElementById('t2').value = data.tasks[1];
+        document.getElementById('t3').value = data.tasks[2];
+        document.getElementById('detail-heart-btn').innerText = data.heart ? '❤️' : '🤍';
+        
+        // 滾動到下方編輯區
+        document.getElementById('details-panel').scrollIntoView({behavior: "smooth"});
+    }
 
-        function getData(date, index) {
-            let data = JSON.parse(localStorage.getItem(date) || '{"tasks":["","",""], "heart":false}');
-            return data.tasks[index];
-        }
+    function updateData() {
+        const data = {
+            tasks: [document.getElementById('t1').value, document.getElementById('t2').value, document.getElementById('t3').value],
+            heart: document.getElementById('detail-heart-btn').innerText === '❤️'
+        };
+        localStorage.setItem(selectedDateStr, JSON.stringify(data));
+        renderCalendar();
+    }
 
-        function toggleHeart(el, date) {
-            el.classList.toggle('active');
-            let data = JSON.parse(localStorage.getItem(date) || '{"tasks":["","",""], "heart":false}');
-            data.heart = el.classList.contains('active');
-            localStorage.setItem(date, JSON.stringify(data));
-        }
+    function toggleHeartInDetail() {
+        const btn = document.getElementById('detail-heart-btn');
+        btn.innerText = (btn.innerText === '🤍') ? '❤️' : '🤍';
+        updateData();
+    }
 
-        function getHeart(date) {
-            let data = JSON.parse(localStorage.getItem(date) || '{"tasks":["","",""], "heart":false}');
-            return data.heart;
-        }
-    </script>
+    function changeMonth(diff) {
+        currentViewDate.setMonth(currentViewDate.getMonth() + diff);
+        renderCalendar();
+    }
+</script>
 </body>
 </html>
