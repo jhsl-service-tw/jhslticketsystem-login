@@ -31,6 +31,7 @@
 
         .day-num { font-size: 14px; font-weight: bold; }
         .ind-row { display: flex; gap: 2px; align-items: center; flex-wrap: wrap; line-height: 1; margin-top: 2px; }
+        /* 使用 ★ 確保顏色正確顯示 */
         .star-s { color: var(--s-red); font-size: 18px; }
         .star-j { color: var(--j-green); font-size: 18px; }
         .heart-mark { position: absolute; bottom: 4px; right: 4px; font-size: 14px; color: #ffb6c1; }
@@ -56,7 +57,7 @@
 
 <div id="login-screen">
     <div style="font-size: 50px; margin-bottom: 10px;">😽</div>
-    <div class="login-title" style="color:var(--orange); font-weight:bold; margin-bottom:20px;">エスアンドジェイカレンダー</div>
+    <div style="color:var(--orange); font-weight:bold; margin-bottom:20px;">エスアンドジェイカレンダー</div>
     <input type="password" id="pwd" placeholder="パスワード" class="login-input">
     <button onclick="checkLogin()" class="login-btn">ログイン</button>
 </div>
@@ -87,7 +88,7 @@
 </div>
 
 <script>
-    // 已填入你的專屬金鑰
+    // 您提供的 Firebase 配置
     const firebaseConfig = {
         apiKey: "AIzaSyA6AW2Lt_SuxNTeEBe6ZUAtSvkpVT96PAM",
         authDomain: "sjcalender-78d2a.firebaseapp.com",
@@ -98,9 +99,7 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    let curMonth = new Date();
-    let selDate = "";
-    let data = {};
+    let curMonth = new Date(), selDate = "", cloudData = {};
 
     function checkLogin() {
         if (document.getElementById('pwd').value === '20190927') {
@@ -111,11 +110,32 @@
     }
 
     function startSync() {
+        // 自動搬家：將此手機原本的 LocalStorage 推送到雲端
+        migrateLocalToCloud();
+
         db.ref('calendar').on('value', (snap) => {
-            data = snap.val() || {};
+            cloudData = snap.val() || {};
             render();
             if(selDate) show(selDate);
         });
+    }
+
+    function migrateLocalToCloud() {
+        let count = 0;
+        for (let i = 0; i < localStorage.length; i++) {
+            let key = localStorage.key(i);
+            if (key.match(/^\d{4}-\d{1,2}-\d{1,2}$/)) {
+                let localVal = JSON.parse(localStorage.getItem(key));
+                if (localVal) {
+                    db.ref('calendar/' + key).update(localVal);
+                    count++;
+                }
+            }
+        }
+        if (count > 0) {
+            alert(count + "件の旧データを同期しました！");
+            localStorage.clear(); // 同步後清空手機本機空間
+        }
     }
 
     function render() {
@@ -128,12 +148,26 @@
         for(let d=1; d<=days; d++) {
             const s = `${y}-${m+1}-${d}`;
             const cell = document.createElement('div'); cell.className = 'day-cell';
-            const dAt = data[s] || {j:[], s:[], red:false, rainbow:false, black:false, emoji:false, heart:false};
-            if(dAt.red) cell.classList.add('hi-red'); else if(dAt.rainbow) cell.classList.add('hi-rainbow'); else if(dAt.black) cell.classList.add('hi-black');
+            const dAt = cloudData[s] || {j:[], s:[], red:false, rainbow:false, black:false, emoji:false, heart:false};
+            
+            // 填色優先順位：紅 > 彩虹 > 黑
+            if(dAt.red) cell.classList.add('hi-red'); 
+            else if(dAt.rainbow) cell.classList.add('hi-rainbow'); 
+            else if(dAt.black) cell.classList.add('hi-black');
+            
             if(new Date().toDateString() === new Date(y,m,d).toDateString()) cell.classList.add('today');
+            
             const jS = (dAt.j && dAt.j.length > 0) ? '<span class="star-j">★</span>' : '';
             const sS = (dAt.s && dAt.s.length > 0) ? '<span class="star-s">★</span>' : '';
-            cell.innerHTML = `<div class="day-num">${d}</div><div class="ind-row">${jS}${sS}</div><div>${dAt.emoji?'<span style="font-size:12px">😆</span>':''}</div>${dAt.heart?'<span class="heart-mark">💞</span>':''}`;
+            
+            cell.innerHTML = `
+                <div class="day-num">${d}</div>
+                <div style="display:flex; flex-direction:column;">
+                    <div style="display:flex; gap:2px;">${jS}${sS}</div>
+                    ${dAt.emoji?'<span style="font-size:12px">😆</span>':''}
+                </div>
+                ${dAt.heart?'<span class="heart-mark">💞</span>':''}
+            `;
             cell.onclick = () => show(s);
             grid.appendChild(cell);
         }
@@ -142,7 +176,7 @@
     function show(s) {
         selDate = s; document.getElementById('details-panel').style.display = 'block';
         document.getElementById('date-label').innerText = s;
-        const dAt = data[s] || {j:[], s:[], red:false, rainbow:false, black:false, emoji:false, heart:false};
+        const dAt = cloudData[s] || {j:[], s:[], red:false, rainbow:false, black:false, emoji:false, heart:false};
         const rendT = (id, list) => {
             const c = document.getElementById(id); c.innerHTML = "";
             (list || []).forEach(t => addRow(id.split('-')[0], t.time, t.text));
@@ -151,6 +185,7 @@
         rendT('j-tasks', dAt.j); rendT('s-tasks', dAt.s);
         const u = (id, a, c) => { const b = document.getElementById(id); if(a) b.classList.add(c); else b.classList.remove(c); };
         u('heart-btn', dAt.heart, 'active-heart'); u('red-btn', dAt.red, 'active-red'); u('rainbow-btn', dAt.rainbow, 'active-rainbow'); u('black-btn', dAt.black, 'active-black'); u('emoji-btn', dAt.emoji, 'active-emoji');
+        setTimeout(() => document.getElementById('details-panel').scrollIntoView({behavior: "smooth"}), 150);
     }
 
     function addRow(type, time="", text="") {
@@ -161,6 +196,7 @@
 
     function addR(type) { addRow(type, "", ""); }
     function toggleBtn(b, cls) { b.classList.toggle(cls); save(); }
+
     function save() {
         if(!selDate) return;
         const getT = (id) => Array.from(document.getElementById(id).querySelectorAll('.task-row')).map(r => ({ time: r.querySelector('.t-time').value, text: r.querySelector('.t-text').value })).filter(t => t.time || t.text);
@@ -172,7 +208,7 @@
             black: document.getElementById('black-btn').classList.contains('active-black'),
             emoji: document.getElementById('emoji-btn').classList.contains('active-emoji')
         };
-        db.ref('calendar/' + selDate).set(dAt);
+        db.ref('calendar/' + selDate).set(dAt); // 同步到雲端
     }
     function changeMonth(n) { curMonth.setMonth(curMonth.getMonth() + n); render(); }
 </script>
