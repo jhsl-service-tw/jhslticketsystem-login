@@ -7,8 +7,8 @@
     <style>
         :root {
             --orange-main: #ffb366;
-            --s-color: #ff0000;
-            --j-color: #006400;
+            --s-color: #ff0000; /* 真っ赤 */
+            --j-color: #006400; /* 深緑 */
             --bg: #fffbf5;
         }
         body { font-family: "Helvetica Neue", Arial, sans-serif; margin: 0; background: var(--bg); color: #444; -webkit-tap-highlight-color: transparent; }
@@ -41,9 +41,9 @@
         .indicators-container { display: flex; flex-direction: column; gap: 2px; flex-grow: 1; margin-top: 2px; }
         .ind-row { display: flex; gap: 2px; align-items: center; flex-wrap: wrap; line-height: 1; }
         
-        /* 星の色の設定 */
-        .star-s { color: var(--s-color); font-size: 18px; }
-        .star-j { color: var(--j-color); font-size: 18px; }
+        /* ★星の色の設定（記号に変更）★ */
+        .star-s { color: var(--s-color); font-size: 18px; line-height: 1; }
+        .star-j { color: var(--j-color); font-size: 18px; line-height: 1; }
         
         .emoji-mark { font-size: 14px; }
         .heart-mark { position: absolute; bottom: 4px; right: 4px; font-size: 14px; }
@@ -135,15 +135,15 @@
             cell.className = 'day-cell';
             const data = JSON.parse(localStorage.getItem(dStr)) || {j:[], s:[], red:false, rainbow:false, black:false, emoji:false, heart:false};
             
-            // 優先順位ロジック: 赤 > 虹 > 黒
             if(data.red) cell.classList.add('highlight-red');
             else if(data.rainbow) cell.classList.add('highlight-rainbow');
             else if(data.black) cell.classList.add('highlight-black');
 
             if(new Date().toDateString() === new Date(y,m,d).toDateString()) cell.classList.add('today');
             
-            const jStar = (data.j && data.j.length > 0) ? '<span class="star-j">⭐</span>' : '';
-            const sStar = (data.s && data.s.length > 0) ? '<span class="star-s">⭐</span>' : '';
+            // ★ ここを修正：絵文字の⭐から、記号の★に変更 ★
+            const jStar = (data.j && data.j.length > 0) ? '<span class="star-j">★</span>' : '';
+            const sStar = (data.s && data.s.length > 0) ? '<span class="star-s">★</span>' : '';
             
             cell.innerHTML = `<div class="day-num">${d}</div><div class="indicators-container"><div class="ind-row">${jStar}${sStar}</div><div class="ind-row">${data.emoji?'<span class="emoji-mark">😆</span>':''}</div></div>${data.heart?'<span class="heart-mark">💞</span>':''}`;
             cell.onclick = () => showDetails(dStr);
