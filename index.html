@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JHSL チケットシステム - 会員ログイン</title>
+    <title>JHSL 售票系統 - 會員中心</title>
     <link rel="icon" href="https://img.icons8.com/color/48/000000/ticket.png" type="image/x-icon">
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database-compat.js"></script>
@@ -16,9 +16,9 @@
             --j-green: #006400; 
             --select-highlight: #e0f0ff;
         }
-        body { font-family: -apple-system, "Helvetica Neue", "Hiragino Kaku Gothic ProN", sans-serif; margin: 0; background: var(--bg); color: #333; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, "Helvetica Neue", "Hiragino Kaku Gothic ProN", "Microsoft JhengHei", sans-serif; margin: 0; background: var(--bg); color: #333; -webkit-tap-highlight-color: transparent; }
 
-        /* --- 偽装ログイン UI --- */
+        /* --- 登入介面 (繁體中文) --- */
         #login-screen { position: fixed; inset: 0; background: #fff; z-index: 10000; overflow-y: auto; }
         .nav-bar { background: #fff; border-bottom: 1px solid #ddd; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
         .logo { color: var(--main-blue); font-size: 18px; font-weight: bold; text-decoration: none; }
@@ -28,7 +28,7 @@
         .social-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 25px; }
         .social-btn { padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; color: #555; display: flex; align-items: center; justify-content: center; gap: 5px; }
 
-        /* --- アプリケーション UI (全日本語化) --- */
+        /* --- 日程管理介面 (日文) --- */
         #app { display: none; padding: 10px; max-width: 500px; margin: auto; padding-bottom: 40px; background: #fffbf5; min-height: 100vh; }
         .header { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; }
         .btn-nav { background: var(--main-blue); border: none; color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; }
@@ -49,7 +49,6 @@
         .star-j { color: var(--j-green); font-size: 18px; }
         .heart-mark { position: absolute; bottom: 4px; right: 4px; font-size: 14px; }
 
-        /* 詳細パネルと予定管理 */
         #details-panel { margin-top: 20px; background: white; border-radius: 25px; padding: 15px; box-shadow: 0 -5px 25px rgba(0,0,0,0.1); border-top: 6px solid var(--main-blue); }
         .task-row { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; background: #f9f9f9; padding: 10px; border-radius: 12px; position: relative; }
         .input-group { display: flex; gap: 8px; align-items: center; }
@@ -57,7 +56,6 @@
         .task-in { flex: 1; border: none; background: transparent; padding: 5px; font-size: 16px; outline: none; border-bottom: 1px solid #eee; }
         .phx-info { font-size: 12px; color: #0056b3; font-weight: bold; background: #e7f3ff; padding: 6px 10px; border-radius: 6px; display: inline-block; margin-top: 5px; }
         
-        /* メニューボタン */
         .btn-menu { display: flex; gap: 8px; margin: 20px 0; justify-content: center; }
         .icon-btn { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #eee; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #eee; cursor: pointer; }
         .active-heart { color: #ff69b4; border-color: #ff69b4; background: #fff5f7; }
@@ -66,18 +64,19 @@
         .active-black { border-color: #000; background: #eee; color: #000; }
         .active-business { border-color: #333; color: #333; background: #f0f0f0; }
 
-        .submit-btn { width: 100%; padding: 15px; background: var(--main-blue); border: none; border-radius: 12px; color: white; font-weight: bold; font-size: 16px; margin-top: 20px; }
+        /* 更新按鈕文字 */
+        .submit-btn { width: 100%; padding: 15px; background: var(--main-blue); border: none; border-radius: 12px; color: white; font-weight: bold; font-size: 16px; margin-top: 20px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div id="login-screen">
-    <div class="nav-bar"><a href="#" class="logo">JHSL チケットシステム</a></div>
+    <div class="nav-bar"><a href="#" class="logo">JHSL 售票系統</a></div>
     <div class="login-container">
-        <div style="font-size: 20px; font-weight: bold; margin-bottom: 30px;">会員ログイン</div>
-        <input type="text" class="form-input" placeholder="ID / メールアドレス">
-        <input type="password" id="pwd" class="form-input" placeholder="パスワードを入力">
-        <button onclick="checkLogin()" class="primary-btn">ログイン</button>
+        <div style="font-size: 20px; font-weight: bold; margin-bottom: 30px;">會員登入</div>
+        <input type="text" class="form-input" placeholder="電子郵件 / 帳號">
+        <input type="password" id="pwd" class="form-input" placeholder="請輸入密碼">
+        <button onclick="checkLogin()" class="primary-btn">確認登入</button>
         <div class="social-grid">
             <div class="social-btn">f Facebook</div><div class="social-btn">G Google</div>
             <div class="social-btn">𝕏 Twitter</div><div class="social-btn"> Apple</div>
@@ -111,11 +110,12 @@
         </div>
 
         <textarea id="memo-input" style="width:100%; min-height:80px; border:1px solid #eee; border-radius:12px; padding:10px; font-size:15px;" placeholder="📝 メッセージ / 備考を残す..."></textarea>
-        <button class="submit-btn" onclick="save()">データを更新してクラウド同期</button>
+        <button class="submit-btn" onclick="save()">日程更新</button>
     </div>
 </div>
 
 <script>
+    // 專屬 Firebase 金鑰
     const firebaseConfig = {
         apiKey: "AIzaSyA6AW2Lt_SuxNTeEBe6ZUAtSvkpVT96PAM",
         authDomain: "sjcalender-78d2a.firebaseapp.com",
@@ -132,7 +132,7 @@
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app').style.display = 'block';
             startSync();
-        } else { alert('アカウント名またはパスワードが正しくありません'); }
+        } else { alert('帳號或密碼錯誤，請再試一次。'); }
     }
 
     function startSync() {
@@ -143,7 +143,6 @@
         });
     }
 
-    // 曜日の日本語変換ヘルパー
     function getDayJP(y, m, d) {
         const days = ['日', '月', '火', '水', '木', '金', '土'];
         return days[new Date(y, m - 1, d).getDay()];
@@ -160,44 +159,28 @@
             const s = `${y}-${m+1}-${d}`;
             const cell = document.createElement('div');
             cell.className = 'day-cell';
-            
             if(s === selDate) cell.classList.add('selected-day');
-            
             const dAt = cloudData[s] || {j:[], s:[], red:false, rainbow:false, black:false, business:false, heart:false};
-            
-            // 枠線優先順位：赤 > 虹 > 黒
             if(dAt.red) cell.classList.add('hi-red');
             else if(dAt.rainbow) cell.classList.add('hi-rainbow');
             else if(dAt.black) cell.classList.add('hi-black');
-            
             const jS = (dAt.j && dAt.j.length > 0) ? '<span class="star-j">★</span>' : '';
             const sS = (dAt.s && dAt.s.length > 0) ? '<span class="star-s">★</span>' : '';
-            
-            cell.innerHTML = `
-                <div class="day-num">${d}</div>
-                <div style="display:flex; gap:2px;">${jS}${sS}</div>
-                <div>${dAt.business ? '💼' : ''}</div>
-                ${dAt.heart ? '<span class="heart-mark">💞</span>' : ''}
-            `;
+            cell.innerHTML = `<div class="day-num">${d}</div><div style="display:flex; gap:2px;">${jS}${sS}</div><div>${dAt.business ? '💼' : ''}</div>${dAt.heart ? '<span class="heart-mark">💞</span>' : ''}`;
             cell.onclick = () => { selDate = s; render(); show(s); };
             grid.appendChild(cell);
         }
     }
 
-    // 鳳凰城時間表示の最適化
     function getPHX(dateStr, timeStr) {
         if(!timeStr) return "--";
         const [y, m, d] = dateStr.split('-').map(Number);
         const [hh, mm] = timeStr.split(':').map(Number);
         const local = new Date(y, m - 1, d, hh, mm);
         const phx = new Date(local.getTime() - (15 * 60 * 60 * 1000));
-        
-        const py = phx.getFullYear();
-        const pm = String(phx.getMonth() + 1).padStart(2, '0');
-        const pd = String(phx.getDate()).padStart(2, '0');
-        const ph = String(phx.getHours()).padStart(2, '0');
+        const py = phx.getFullYear(), pm = String(phx.getMonth() + 1).padStart(2, '0');
+        const pd = String(phx.getDate()).padStart(2, '0'), ph = String(phx.getHours()).padStart(2, '0');
         const pDay = getDayJP(py, pm, pd);
-        
         return `PHX:${py}/${pm}/${pd}(${pDay}) ${ph}:00`;
     }
 
@@ -210,9 +193,7 @@
         document.getElementById('details-panel').style.display = 'block';
         const [y, m, d] = s.split('-').map(Number);
         const dayLabel = getDayJP(y, m, d);
-        // 日付ラベルの形式変更
         document.getElementById('date-label').innerText = `${y}/${String(m).padStart(2,'0')}/${String(d).padStart(2,'0')}(${dayLabel})`;
-        
         const dAt = cloudData[s] || {j:[], s:[], red:false, rainbow:false, black:false, business:false, heart:false, memo:""};
         if(!soft) {
             const rend = (id, list) => {
@@ -222,36 +203,21 @@
             };
             rend('j-tasks', dAt.j); rend('s-tasks', dAt.s);
             document.getElementById('memo-input').value = dAt.memo || "";
-            
             const u = (id, a, c) => { const b = document.getElementById(id); if(a) b.classList.add(c); else b.classList.remove(c); };
-            u('heart-btn', dAt.heart, 'active-heart');
-            u('red-btn', dAt.red, 'active-red');
-            u('rainbow-btn', dAt.rainbow, 'active-rainbow');
-            u('black-btn', dAt.black, 'active-black');
-            u('business-btn', dAt.business, 'active-business');
+            u('heart-btn', dAt.heart, 'active-heart'); u('red-btn', dAt.red, 'active-red'); u('rainbow-btn', dAt.rainbow, 'active-rainbow'); u('black-btn', dAt.black, 'active-black'); u('business-btn', dAt.business, 'active-business');
         }
     }
 
     function addRow(type, time="", text="") {
         const div = document.createElement('div'); div.className = 'task-row';
-        div.innerHTML = `
-            <div class="input-group">
-                <input type="time" class="time-in t-time" value="${time}" oninput="updatePhxDisplay(this)">
-                <input type="text" class="task-in t-text" value="${text}" placeholder="予定内容を入力">
-            </div>
-            <div class="phx-info"><span class="phx-val">${getPHX(selDate, time)}</span></div>
-            <button onclick="this.parentElement.remove()" style="position:absolute; top:5px; right:5px; border:none; background:none; color:#ccc;">🗑️</button>
-        `;
+        div.innerHTML = `<div class="input-group"><input type="time" class="time-in t-time" value="${time}" oninput="updatePhxDisplay(this)"><input type="text" class="task-in t-text" value="${text}" placeholder="内容を入力"></div><div class="phx-info"><span class="phx-val">${getPHX(selDate, time)}</span></div><button onclick="this.parentElement.remove()" style="position:absolute; top:5px; right:5px; border:none; background:none; color:#ccc;">🗑️</button>`;
         document.getElementById(type + '-tasks').appendChild(div);
     }
 
     function addRRow(type) { addRow(type, "", ""); }
 
     function save() {
-        const getT = (id) => Array.from(document.getElementById(id).querySelectorAll('.task-row')).map(r => ({
-            time: r.querySelector('.t-time').value, text: r.querySelector('.t-text').value
-        })).filter(t => t.time || t.text);
-        
+        const getT = (id) => Array.from(document.getElementById(id).querySelectorAll('.task-row')).map(r => ({ time: r.querySelector('.t-time').value, text: r.querySelector('.t-text').value })).filter(t => t.time || t.text);
         const dAt = {
             j: getT('j-tasks'), s: getT('s-tasks'),
             red: document.getElementById('red-btn').classList.contains('active-red'),
@@ -261,7 +227,8 @@
             heart: document.getElementById('heart-btn').classList.contains('active-heart'),
             memo: document.getElementById('memo-input').value
         };
-        db.ref('calendar/' + selDate).set(dAt).then(() => alert("更新完了。"));
+        // 提示訊息變更
+        db.ref('calendar/' + selDate).set(dAt).then(() => alert("更新完了"));
     }
     function changeMonth(n) { curMonth.setMonth(curMonth.getMonth() + n); render(); }
 </script>
