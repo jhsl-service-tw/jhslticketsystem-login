@@ -253,9 +253,10 @@
             heart: document.getElementById('heart-btn').classList.contains('active-heart'),
             memo: document.getElementById('memo-input').value
         };
-        db.ref('calendar/' + selDate).set(dAt).then(() => alert("資料更新完成，雲端已同步"));
+        db.ref('calendar/' + selDate).set(dAt).then(() => alert("更新完了"));
     }
     function changeMonth(n) { curMonth.setMonth(curMonth.getMonth() + n); render(); }
 </script>
 </body>
 </html>
+
