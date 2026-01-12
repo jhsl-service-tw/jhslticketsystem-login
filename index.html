@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>JHSL 售票系統 - 會員中心</title>
+    <link rel="icon" href="https://img.icons8.com/color/48/000000/ticket.png" type="image/x-icon">
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database-compat.js"></script>
     <style>
@@ -13,121 +14,102 @@
             --bg: #f8f9fa; 
             --s-red: #ff0000; 
             --j-green: #006400; 
-            --select-blue: rgba(0, 86, 179, 0.1); /* 選定日期的淺藍背景 */
+            --select-highlight: #e0f0ff;
         }
-        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; margin: 0; background: var(--bg); color: #333; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, sans-serif; margin: 0; background: var(--bg); color: #333; -webkit-tap-highlight-color: transparent; }
 
-        /* --- 偽裝登入頁面 UI --- */
+        /* --- 偽裝登入 UI --- */
         #login-screen { position: fixed; inset: 0; background: #fff; z-index: 10000; overflow-y: auto; }
-        .nav-bar { background: #fff; border-bottom: 1px solid #ddd; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; }
+        .nav-bar { background: #fff; border-bottom: 1px solid #ddd; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
         .logo { color: var(--main-blue); font-size: 18px; font-weight: bold; text-decoration: none; }
-        .nav-links { font-size: 12px; color: var(--gray); display: flex; gap: 12px; }
-        
         .login-container { max-width: 400px; margin: 30px auto; padding: 20px; text-align: center; }
-        .login-title { font-size: 20px; font-weight: bold; margin-bottom: 25px; color: #333; }
-        .form-group { text-align: left; margin-bottom: 15px; }
-        .form-label { display: block; font-size: 13px; margin-bottom: 5px; color: #666; }
-        .form-input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; outline: none; }
-        
-        .primary-btn { width: 100%; padding: 14px; background: var(--main-blue); border: none; border-radius: 4px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; }
-        
-        .divider { border-top: 1px solid #eee; margin: 30px 0; position: relative; }
-        .divider::after { content: "或使用社交帳號登入"; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #fff; padding: 0 10px; font-size: 12px; color: #999; }
-        
-        /* 社交按鈕偽裝 */
-        .social-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .social-btn { padding: 10px; border: 1px solid #ddd; border-radius: 4px; background: #fff; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; color: #555; cursor: pointer; }
-        .icon-fb { color: #1877f2; }
-        .icon-gg { color: #ea4335; }
-        .icon-x { color: #000; }
-        .icon-ap { color: #000; }
+        .form-input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; margin-bottom: 15px; outline: none; }
+        .primary-btn { width: 100%; padding: 14px; background: var(--main-blue); border: none; border-radius: 4px; color: white; font-size: 16px; font-weight: bold; }
+        .social-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 25px; }
+        .social-btn { padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; color: #555; display: flex; align-items: center; justify-content: center; gap: 5px; }
 
         /* --- 內部主程式 UI --- */
         #app { display: none; padding: 10px; max-width: 500px; margin: auto; padding-bottom: 40px; background: #fffbf5; min-height: 100vh; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; }
+        .btn-nav { background: var(--main-blue); border: none; color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; }
+
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; background: white; padding: 8px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        .weekday { text-align: center; font-size: 12px; color: #999; padding-bottom: 5px; font-weight: bold; }
+        .weekday { text-align: center; font-size: 12px; color: #999; font-weight: bold; }
         
-        /* 月曆格子 */
         .day-cell { min-height: 85px; border: 1px solid #fdf0e0; border-radius: 10px; position: relative; padding: 4px; background: #fff; display: flex; flex-direction: column; cursor: pointer; box-sizing: border-box; }
         
-        /* 選定日期高亮機制 */
-        .selected-day { border: 2.5px solid var(--main-blue) !important; background-color: var(--select-blue) !important; }
-        
+        /* 框線顏色優先順位 */
+        .selected-day { border: 2.5px solid var(--main-blue) !important; background-color: var(--select-highlight) !important; }
         .hi-red { border: 2.5px solid var(--s-red) !important; background: #fff0f0 !important; }
+        .hi-rainbow { border: 2.5px solid transparent !important; background: linear-gradient(white, white) padding-box, linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet) border-box !important; }
+        .hi-black { border: 2.5px solid #000 !important; background: #d3d3d3 !important; }
+
         .day-num { font-size: 14px; font-weight: bold; }
-        
-        /* 詳細面板 */
+        .star-s { color: var(--s-red); font-size: 18px; }
+        .star-j { color: var(--j-green); font-size: 18px; }
+        .heart-mark { position: absolute; bottom: 4px; right: 4px; font-size: 14px; }
+
+        /* 面板與元件 */
         #details-panel { margin-top: 20px; background: white; border-radius: 25px; padding: 15px; box-shadow: 0 -5px 25px rgba(0,0,0,0.1); border-top: 6px solid var(--main-blue); }
         .task-row { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; background: #f9f9f9; padding: 10px; border-radius: 12px; position: relative; }
         .input-group { display: flex; gap: 8px; align-items: center; }
         .time-in { border: 1px solid #ddd; border-radius: 8px; padding: 8px 5px; width: 100px; font-size: 16px; background: #fff; }
         .task-in { flex: 1; border: none; background: transparent; padding: 5px; font-size: 16px; outline: none; border-bottom: 1px solid #eee; }
-        
         .phx-info { font-size: 11px; color: #0056b3; font-weight: bold; background: #e7f3ff; padding: 4px 8px; border-radius: 6px; display: inline-block; margin-top: 5px; }
-        .submit-btn { width: 100%; padding: 15px; background: var(--main-blue); border: none; border-radius: 12px; color: white; font-weight: bold; font-size: 16px; margin-top: 20px; }
         
-        .star-s { color: var(--s-red); font-size: 18px; }
-        .star-j { color: var(--j-green); font-size: 18px; }
+        /* 功能按鈕 */
+        .btn-menu { display: flex; gap: 8px; margin: 20px 0; justify-content: center; }
+        .icon-btn { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #eee; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #eee; cursor: pointer; }
+        .active-heart { color: #ff69b4; border-color: #ff69b4; background: #fff5f7; }
+        .active-red { border-color: var(--s-red); background: #fff0f0; color: var(--s-red); }
+        .active-rainbow { border: 2px solid orange !important; color: #000; }
+        .active-black { border-color: #000; background: #eee; color: #000; }
+        .active-business { border-color: #333; color: #333; background: #f0f0f0; }
+
+        .submit-btn { width: 100%; padding: 15px; background: var(--main-blue); border: none; border-radius: 12px; color: white; font-weight: bold; font-size: 16px; margin-top: 20px; }
     </style>
 </head>
 <body>
 
 <div id="login-screen">
-    <div class="nav-bar">
-        <a href="#" class="logo">JHSL 售票系統</a>
-        <div class="nav-links">
-            <span>首頁</span>
-            <span>購票流程</span>
-            <span>常見問題</span>
-            <span>會員中心</span>
-        </div>
-    </div>
+    <div class="nav-bar"><a href="#" class="logo">JHSL 售票系統</a></div>
     <div class="login-container">
-        <div class="login-title">會員登入</div>
-        <div class="form-group">
-            <label class="form-label">電子郵件 / 帳號</label>
-            <input type="text" class="form-input" placeholder="example@mail.com">
-        </div>
-        <div class="form-group">
-            <label class="form-label">密碼</label>
-            <input type="password" id="pwd" class="form-input" placeholder="請輸入密碼">
-        </div>
-        <button onclick="checkLogin()" class="primary-btn">登入</button>
-        
-        <div class="divider"></div>
-        
+        <div style="font-size: 20px; font-weight: bold; margin-bottom: 30px;">會員登入</div>
+        <input type="text" class="form-input" placeholder="帳號 / 電子郵件">
+        <input type="password" id="pwd" class="form-input" placeholder="請輸入密碼">
+        <button onclick="checkLogin()" class="primary-btn">確認登入</button>
         <div class="social-grid">
-            <div class="social-btn"><span class="icon-fb">f</span> Facebook</div>
-            <div class="social-btn"><span class="icon-gg">G</span> Google</div>
-            <div class="social-btn"><span class="icon-x">𝕏</span> Twitter</div>
-            <div class="social-btn"><span class="icon-ap"></span> Apple</div>
-        </div>
-        
-        <div style="font-size: 12px; color: #999; margin-top: 40px;">
-            © 2026 JHSL Ticketing Service. All rights reserved.
+            <div class="social-btn">f Facebook</div><div class="social-btn">G Google</div>
+            <div class="social-btn">𝕏 Twitter</div><div class="social-btn"> Apple</div>
         </div>
     </div>
 </div>
 
 <div id="app">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin:10px 0;">
-        <button onclick="changeMonth(-1)" style="background:var(--main-blue); color:white; border:none; border-radius:20px; padding:5px 15px;">◀</button>
+    <div class="header">
+        <button onclick="changeMonth(-1)" class="btn-nav">◀</button>
         <h2 id="month-display" style="font-size: 18px; margin:0; color:var(--main-blue);"></h2>
-        <button onclick="changeMonth(1)" style="background:var(--main-blue); color:white; border:none; border-radius:20px; padding:5px 15px;">▶</button>
+        <button onclick="changeMonth(1)" class="btn-nav">▶</button>
     </div>
     <div class="calendar-grid" id="calendar-grid"></div>
 
     <div id="details-panel" style="display:none;">
-        <div id="date-label" style="text-align:center; font-weight:bold; color:#999; margin-bottom:15px;"></div>
+        <div id="date-label" style="text-align:center; font-weight:bold; color:#999; margin-bottom:15px; font-size:18px;"></div>
         <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span style="color:var(--j-green); font-weight:bold;">J</span><button onclick="addRRow('j')" style="font-size:12px;">+ 追加</button></div>
         <div id="j-tasks"></div>
         <div style="display:flex; justify-content:space-between; margin:15px 0 10px;"><span style="color:var(--s-red); font-weight:bold;">S</span><button onclick="addRRow('s')" style="font-size:12px;">+ 追加</button></div>
         <div id="s-tasks"></div>
 
-        <div style="margin-top:20px;">
-            <textarea id="memo-input" style="width:100%; min-height:80px; border:1px solid #eee; border-radius:12px; padding:10px; font-size:15px;" placeholder="📝 留言/筆記..."></textarea>
+        <div class="btn-menu">
+            <button class="icon-btn" id="heart-btn" onclick="this.classList.toggle('active-heart')">💞</button>
+            <button class="icon-btn" id="red-btn" onclick="toggleFrame('red')">□</button>
+            <button class="icon-btn" id="rainbow-btn" onclick="toggleFrame('rainbow')">✈️</button>
+            <button class="icon-btn" id="black-btn" onclick="toggleFrame('black')">■</button>
+            <button class="icon-btn" id="business-btn" onclick="this.classList.toggle('active-business')">💼</button>
         </div>
-        <button class="submit-btn" onclick="save()">更新資料 / 完了</button>
+
+        <textarea id="memo-input" style="width:100%; min-height:80px; border:1px solid #eee; border-radius:12px; padding:10px; font-size:15px;" placeholder="📝 留言/筆記..."></textarea>
+        <button class="submit-btn" onclick="save()">更新資料並同步 / 完了</button>
     </div>
 </div>
 
@@ -159,30 +141,45 @@
         });
     }
 
+    function toggleFrame(type) {
+        const btnRed = document.getElementById('red-btn');
+        const btnRain = document.getElementById('rainbow-btn');
+        const btnBlack = document.getElementById('black-btn');
+        if(type === 'red') { btnRed.classList.toggle('active-red'); btnRain.classList.remove('active-rainbow'); btnBlack.classList.remove('active-black'); }
+        if(type === 'rainbow') { btnRain.classList.toggle('active-rainbow'); btnRed.classList.remove('active-red'); btnBlack.classList.remove('active-black'); }
+        if(type === 'black') { btnBlack.classList.toggle('active-black'); btnRed.classList.remove('active-red'); btnRain.classList.remove('active-rainbow'); }
+    }
+
     function render() {
         const grid = document.getElementById('calendar-grid');
         grid.innerHTML = ['日','月','火','水','木','金','土'].map(d => `<div class="weekday">${d}</div>`).join('');
         const y = curMonth.getFullYear(), m = curMonth.getMonth();
         document.getElementById('month-display').innerText = `${y}年 ${m + 1}月`;
         const first = new Date(y, m, 1).getDay(), days = new Date(y, m + 1, 0).getDate();
-        
         for(let i=0; i<first; i++) grid.appendChild(document.createElement('div'));
-        
         for(let d=1; d<=days; d++) {
             const s = `${y}-${m+1}-${d}`;
             const cell = document.createElement('div');
             cell.className = 'day-cell';
             
-            // 選定日期高亮機制
             if(s === selDate) cell.classList.add('selected-day');
             
-            const dAt = cloudData[s] || {j:[], s:[], red:false};
+            const dAt = cloudData[s] || {j:[], s:[], red:false, rainbow:false, black:false, business:false, heart:false};
+            
+            // 框線邏輯 (優先權：紅 > 彩 > 黑)
             if(dAt.red) cell.classList.add('hi-red');
+            else if(dAt.rainbow) cell.classList.add('hi-rainbow');
+            else if(dAt.black) cell.classList.add('hi-black');
             
             const jS = (dAt.j && dAt.j.length > 0) ? '<span class="star-j">★</span>' : '';
             const sS = (dAt.s && dAt.s.length > 0) ? '<span class="star-s">★</span>' : '';
             
-            cell.innerHTML = `<div class="day-num">${d}</div><div>${jS}${sS}</div>`;
+            cell.innerHTML = `
+                <div class="day-num">${d}</div>
+                <div style="display:flex; gap:2px;">${jS}${sS}</div>
+                <div>${dAt.business ? '💼' : ''}</div>
+                ${dAt.heart ? '<span class="heart-mark">💞</span>' : ''}
+            `;
             cell.onclick = () => { selDate = s; render(); show(s); };
             grid.appendChild(cell);
         }
@@ -207,7 +204,7 @@
     function show(s, soft = false) {
         document.getElementById('details-panel').style.display = 'block';
         document.getElementById('date-label').innerText = s;
-        const dAt = cloudData[s] || {j:[], s:[], memo:""};
+        const dAt = cloudData[s] || {j:[], s:[], red:false, rainbow:false, black:false, business:false, heart:false, memo:""};
         if(!soft) {
             const rend = (id, list) => {
                 const c = document.getElementById(id); c.innerHTML = "";
@@ -216,6 +213,14 @@
             };
             rend('j-tasks', dAt.j); rend('s-tasks', dAt.s);
             document.getElementById('memo-input').value = dAt.memo || "";
+            
+            // 設定按鈕狀態
+            const u = (id, a, c) => { const b = document.getElementById(id); if(a) b.classList.add(c); else b.classList.remove(c); };
+            u('heart-btn', dAt.heart, 'active-heart');
+            u('red-btn', dAt.red, 'active-red');
+            u('rainbow-btn', dAt.rainbow, 'active-rainbow');
+            u('black-btn', dAt.black, 'active-black');
+            u('business-btn', dAt.business, 'active-business');
         }
     }
 
@@ -238,11 +243,17 @@
         const getT = (id) => Array.from(document.getElementById(id).querySelectorAll('.task-row')).map(r => ({
             time: r.querySelector('.t-time').value, text: r.querySelector('.t-text').value
         })).filter(t => t.time || t.text);
+        
         const dAt = {
             j: getT('j-tasks'), s: getT('s-tasks'),
+            red: document.getElementById('red-btn').classList.contains('active-red'),
+            rainbow: document.getElementById('rainbow-btn').classList.contains('active-rainbow'),
+            black: document.getElementById('black-btn').classList.contains('active-black'),
+            business: document.getElementById('business-btn').classList.contains('active-business'),
+            heart: document.getElementById('heart-btn').classList.contains('active-heart'),
             memo: document.getElementById('memo-input').value
         };
-        db.ref('calendar/' + selDate).set(dAt).then(() => alert("資料更新完成"));
+        db.ref('calendar/' + selDate).set(dAt).then(() => alert("資料更新完成，雲端已同步"));
     }
     function changeMonth(n) { curMonth.setMonth(curMonth.getMonth() + n); render(); }
 </script>
